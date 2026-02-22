@@ -20,7 +20,7 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
 ```
 While the function is transfered from the receiver script into sender script it allows for a single script to act as both.
 
-And to link the function to be called whenever information is recevied.
+Also add a link to the function so that it's called whenever information is recevied.
 ```
 esp_now_register_recv_cb(OnDataRecv);
 ```
