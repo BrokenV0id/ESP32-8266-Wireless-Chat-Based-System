@@ -3,9 +3,7 @@ A text-based chat system that allows for wireless communication between ESP32 an
 
 
 
-
 **So far (V1):**
-
 Established a communication between one device and another where only one device at the current time can send messages to the other.
 
 _Sender:_
@@ -17,5 +15,4 @@ _Receiver:_
 The receiver successfully recives the text and prints via Serial to see.
 
 _How it works?_
-
 The sender first waits for any text given via Serial. Once text has been read it encodes the string into bytes and then sends it to the receiver.The receiver then waits for any message being sent to it. Once a message arrives it decodes the bytes back into characters and prints the completed message.
