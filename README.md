@@ -1,8 +1,7 @@
 # ESP32-8266-Wireless-Chat-Based-System
 A text-based chat system that allows for wireless communication between ESP32 and ESP8266 devices using the protocol ESP-NOW.
-
+***
 **This project serves as way to learn Espressifs protocol ESP-NOW. This is not a project that will receive constant updates in days that follow.**
-
 ***
 This project allows for wireless communication between multiple ESP32 or ESP8266 devices at once using the ESP-NOW protocol. 
 
@@ -13,7 +12,8 @@ _Features:_
    handle more then 5 users.
 
 _Examples:_
-<img width="1327" height="243" alt="image" src="https://github.com/user-attachments/assets/62d4eea9-5b99-480e-b4b5-49fbefb055c8" />
-<img width="1327" height="246" alt="image" src="https://github.com/user-attachments/assets/9e38c7e0-00eb-4614-80f8-dd48479e5072" />
+<img width="1328" height="258" alt="image" src="https://github.com/user-attachments/assets/406142ec-3c8b-4c3f-9476-71bb154edf84" />
+<img width="1328" height="243" alt="image" src="https://github.com/user-attachments/assets/0d784d00-e589-4ed1-bca0-b2d320fd09ae" />
+
 
 **Note - A status message will appear on the device that sent the message indicating if the message sent or not. '0' means it did while a '1' means it didn't.**
