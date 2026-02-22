@@ -9,7 +9,7 @@ Established a communication between one device and another where only one device
 
 _Sender:_
 <img width="1327" height="243" alt="Screenshot_20260222_130808" src="https://github.com/user-attachments/assets/6642b8b7-ccf2-4f69-a2fc-2a87eb2e80d6" />
-The sender sends text that is inputed via serial and sends it to the receiver. Successfully sent message is indicated via a status code of '0'.
+The sender sends text that is inputed via serial and sends it to the receiver. Successfully sent messages is indicated via a status code of '0'.
 
 _Receiver:_
 <img width="1327" height="246" alt="Screenshot_20260222_130726" src="https://github.com/user-attachments/assets/b39960b3-ad30-4da9-b564-2ff3a028a09f" />
