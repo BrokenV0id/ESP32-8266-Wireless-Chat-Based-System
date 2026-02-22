@@ -2,6 +2,8 @@
 A text-based chat system that allows for wireless communication between ESP32 and ESP8266 devices using the protocol ESP-NOW.
 
 
+
+
 **So far (V1):**
 
 Established a communication between one device and another where only one device at the current time can send messages to the other.
