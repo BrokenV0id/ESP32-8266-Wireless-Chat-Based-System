@@ -1,20 +1,19 @@
 # ESP32-8266-Wireless-Chat-Based-System
 A text-based chat system that allows for wireless communication between ESP32 and ESP8266 devices using the protocol ESP-NOW.
 
+**This project serves as way to learn Espressifs protocol ESP-NOW. This is not a project that will receive constant updates in days that follow.**
 
+***
+This project allows for wireless communication between multiple ESP32 or ESP8266 devices at once using the ESP-NOW protocol. 
 
-**So far (V1):**
+_Features:_
+1. Plug and play - Upload the code and it should work straight away.
+2. Name identification - Received messages will show who they are from based on a user set name.
+3. Wide user support - Allows for multple devices to communicate at once. While the exact number is unknown, it is believed to
+   handle more then 5 users.
 
-Established a communication between one device and another where only one device at the current time can send messages to the other.
+_Examples:_
+<img width="1327" height="243" alt="image" src="https://github.com/user-attachments/assets/62d4eea9-5b99-480e-b4b5-49fbefb055c8" />
+<img width="1327" height="246" alt="image" src="https://github.com/user-attachments/assets/9e38c7e0-00eb-4614-80f8-dd48479e5072" />
 
-_Sender:_
-<img width="1327" height="243" alt="Screenshot_20260222_130808" src="https://github.com/user-attachments/assets/6642b8b7-ccf2-4f69-a2fc-2a87eb2e80d6" />
-The sender sends text that is inputed via serial and sends it to the receiver. Successfully sent messages is indicated via a status code of '0'.
-
-_Receiver:_
-<img width="1327" height="246" alt="Screenshot_20260222_130726" src="https://github.com/user-attachments/assets/b39960b3-ad30-4da9-b564-2ff3a028a09f" />
-The receiver successfully recives the text and prints via Serial to see.
-
-_How it works?_
-
-The sender first waits for any text given via Serial. Once text has been read it encodes the string into bytes and then sends it to the receiver.The receiver then waits for any message being sent to it. Once a message arrives it decodes the bytes back into characters and prints the completed message.
+**Note - A status message will appear on the device that sent the message indicating if the message sent or not. '0' means it did while a '1' means it didn't.**
