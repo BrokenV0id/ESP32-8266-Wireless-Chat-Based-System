@@ -1,4 +1,250 @@
-Established a communication between one device and another where only one device at the current time can send messages to the other.
+I decided for version 1 I should aim to understand how the protocol works and how to program it. So, the first version will aim on establishing a connection between 1 device and the other, where the first device sends a message and the other receives it.
+
+The first thing to do was to create two seperate files and make sure both included the libraires that was needed.
+```
+#include <esp_now.h>
+#include <WiFi.h>
+```
+Next declare what channel the devices will communicate on. (1-14)
+```
+#define CHANNEL 1
+```
+
+Now in the sender program we declare a variable that will store information relating to the receiver.
+```
+esp_now_peer_info_t receiver;
+```
+
+And now we can begin coding the setup function.
+We start by declaring Serial and making the ESP act as a WiFi station.
+```
+Serial.begin(115200);
+WiFi.mode(WIFI_STA);
+```
+
+We now set the peer variable to include the receiver's MAC address as well as what channel to communicate on and if to encryt data. For this project I deicded not too.
+```
+uint8_t receiverAddress[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // change with mac address of device you want to talk to
+memcpy(receiver.peer_addr, receiverAddress, 6);
+receiver.channel = CHANNEL;
+receiver.encrypt = false;
+```
+
+And to find the MAC address of the receiver run this code.
+```
+// ============ LIBRARIES ============
+#include <WiFi.h>
+
+// ============ FUNCTIONS ============
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+
+  delay(3000); // give time for serial to establish
+
+  Serial.println("Device MAC: " + WiFi.macAddress()); // print MAC address of device
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+}
+```
+
+Once you have the MAC address replace the values inside the {} with it.
+```
+uint8_t receiverAddress[] = {}; // <- put it here
+```
+
+Now we use "esp_now_init()" to start ESP-NOW and use a if statement to check if it successfully started or not.
+```
+if (esp_now_init() != ESP_OK) {
+  Serial.println("Failed to init ESP-NOW.");
+  return;
+}
+```
+
+Next we register a function that will be called everytime a message is sent.
+```
+esp_now_register_send_cb(onDataSent);
+```
+
+And the function will print the status of the sent message. '0' means it sent and '1' means it didn't.
+```
+void onDataSent(const uint8_t *mac_address, esp_now_send_status_t status) {
+  Serial.print("Status: ");
+  Serial.println(status);
+}
+```
+
+And now to finish the setup function, add 'esp_now_add_peer(&receiver)' so that the ESP knows who to talk too.
+```
+if (esp_now_add_peer(&receiver) != ESP_OK) {
+  Serial.println("Failed to add peer.");
+  return;
+}
+```
+
+Now the finished setup function should look like this.
+```
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+
+  Serial.println("Device MAC: " + WiFi.macAddress());
+
+  uint8_t receiverAddress[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  memcpy(receiver.peer_addr, receiverAddress, 6);
+  receiver.channel = CHANNEL;
+  receiver.encrypt = false;
+
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Failed to init ESP-NOW.");
+    return;
+  }
+
+  esp_now_register_send_cb(onDataSent);
+  if (esp_now_add_peer(&receiver) != ESP_OK) {
+    Serial.println("Failed to add peer.");
+    return;
+  }
+}
+```
+
+And all that's left to add to the loop function is.
+```
+esp_now_send(receiver.peer_addr, (uint8_t*)message.c_str(), message.length());
+```
+This will send the message to receiver.
+
+After adding some of my own logic to read given text from Serial to then send. The finished loop function.
+```
+void loop() {
+  if (Serial.available()) {
+    String message = Serial.readStringUntil('\n');
+    esp_now_send(receiver.peer_addr, (uint8_t*)message.c_str(), message.length());
+  }
+
+  delay(2000);
+}
+```
+
+Now after all that the sender script is now complete and should look like.
+```
+// ============ LIBRARIES ============
+#include <esp_now.h>
+#include <WiFi.h>
+
+// ============ VARIABLES ============
+#define CHANNEL 1
+
+esp_now_peer_info_t receiver;
+
+// ============ FUNCTIONS ============
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+
+  Serial.println("Device MAC: " + WiFi.macAddress());
+
+  uint8_t receiverAddress[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  memcpy(receiver.peer_addr, receiverAddress, 6);
+  receiver.channel = CHANNEL;
+  receiver.encrypt = false;
+
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Failed to init ESP-NOW.");
+    return;
+  }
+
+  esp_now_register_send_cb(onDataSent);
+  if (esp_now_add_peer(&receiver) != ESP_OK) {
+    Serial.println("Failed to add peer.");
+    return;
+  }
+}
+
+void loop() {
+  if (Serial.available()) {
+    String message = Serial.readStringUntil('\n');
+    esp_now_send(receiver.peer_addr, (uint8_t*)message.c_str(), message.length());
+  }
+
+  delay(2000);
+}
+
+void onDataSent(const uint8_t *mac_address, esp_now_send_status_t status) {
+  Serial.print("Status: ");
+  Serial.println(status);
+}
+```
+
+Now all thats left is program the reciever script to handle incoming messages.
+
+Most of it remains the same except for after we start ESP-NOW we instead link a callback to a different function with.
+```
+esp_now_register_recv_cb(OnDataRecv);
+```
+
+So now setup should look like this for the receiver.
+```
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+
+  esp_now_init();
+  esp_now_register_recv_cb(OnDataRecv);
+}
+```
+
+And for a function to handle incoming messages, we will just get the data from a parameter and deocde it into the final message.
+```
+void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
+  Serial.print("Recived: ");
+  
+  for (int i = 0; i < data_len; i++) {
+    Serial.print((char)data[i]);
+  }
+
+  Serial.println();
+}
+```
+
+And with that the receiver script is complete and should look like this.
+```
+// ============ LIBRARIES ============
+#include <esp_now.h>
+#include <WiFi.h>
+
+// ============ VARIABLES ============
+#define CHANNEL 1
+
+// ============ FUNCTIONS ============
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+
+  esp_now_init();
+  esp_now_register_recv_cb(OnDataRecv);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+}
+
+void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
+  Serial.print("Recived: ");
+  
+  for (int i = 0; i < data_len; i++) {
+    Serial.print((char)data[i]);
+  }
+
+  Serial.println();
+}
+```
+
+When both scirpts are uplaoded and ran we now get a demonstration of it successfully working.
 
 _Sender:_
 <img width="1327" height="243" alt="image" src="https://github.com/user-attachments/assets/66ed4731-9cdf-4f54-b615-9b9bd127db9e" />
@@ -7,8 +253,3 @@ The sender sends text that is inputed via serial and sends it to the receiver. S
 _Receiver:_
 <img width="1327" height="246" alt="image" src="https://github.com/user-attachments/assets/5e46e150-3255-49f1-95c0-b9f321ea6ad1" />
 The receiver successfully recives the text and prints via Serial to see.
-
-_How it works?_
-
-The sender first waits for any text given via Serial. Once text has been read it encodes the string into bytes and then sends it to the receiver.
-The receiver then waits for any message being sent to it. Once a message arrives it decodes the bytes back into characters and prints the completed message.
