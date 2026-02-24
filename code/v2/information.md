@@ -39,4 +39,4 @@ Device 1:
 Device 2:
 <img width="1328" height="243" alt="image" src="https://github.com/user-attachments/assets/de055fc2-4062-4de3-ab3d-1525fac24daa" />
 
-These images show messages sent between the two with the deviecs with the status codes of '0', indicating that messages was sent successfully for bother devices.
+These images show messages sent between the two with the deviecs with the status code of '0', indicating that messages was sent successfully for bother devices.
