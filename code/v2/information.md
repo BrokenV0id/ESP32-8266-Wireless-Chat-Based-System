@@ -25,7 +25,7 @@ Also add a link to the function so that it's called whenever information is rece
 esp_now_register_recv_cb(OnDataRecv);
 ```
 
-To make it easier while testing I will modify bothe devices to have a unqiue name making it easier to know the difference between the two.
+To make it easier while testing I will modify both devices to have a unqiue name making it easier to know the difference between the two.
 ```
 String name = "device: ";
 ```
