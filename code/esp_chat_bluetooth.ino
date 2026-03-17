@@ -3,43 +3,74 @@
 #include <WiFi.h>
 #include <BluetoothSerial.h>
 
+#include <Crypto.h>
+#include <AES.h>
+
 // ============ VARIABLES ============
-#define CHANNEL 1
-#define MAX_MESSAGE_LENGTH 150
-
-String name = "device1"; // name of device
-const bool device_logs = false; // set true if you want 
-
-esp_now_peer_info_t peer;
-
 BluetoothSerial SerialBT;
 
+#define CHANNEL 1
+#define BLOCK_SIZE 16
+#define MAX_MESSAGE_LENGTH 128   // must be multiple of 16 for AES
+
+String name = "device1"; // name of user
+
+esp_now_peer_info_t peer;
+AES128 aes;
+
+
+// feel free to change the key! However, all devices you want to talk too must have the same key.
+byte aesKey[16] = {
+  0x73, 0x19, 0xA4, 0xC8,
+  0x55, 0x2F, 0x91, 0xE3,
+  0x0B, 0x6D, 0x44, 0xFA,
+  0x9C, 0x27, 0x81, 0x5E
+};
+
+byte plain[BLOCK_SIZE];
+byte cipher[BLOCK_SIZE];
+byte decrypted[BLOCK_SIZE];
+
+
 // ============ FUNCTIONS ============
+
+void encryptBlock(byte *input, byte *output) {
+  aes.setKey(aesKey, 16);
+  aes.encryptBlock(output, input);
+}
+
+void decryptBlock(byte *input, byte *output) {
+  aes.setKey(aesKey, 16);
+  aes.decryptBlock(output, input);
+}
+
 void setup() {
   SerialBT.begin("ESP32");
   WiFi.mode(WIFI_STA);
 
-  delay(2000); // give serial time to establish connection
-  SerialBT.println("Device MAC: " + WiFi.macAddress());
+  delay(2000);
+  SerialBT.println("MAC: " + WiFi.macAddress());
 
-  uint8_t peerAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; // broadcast MAC address
+  uint8_t peerAddress[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+
   memcpy(peer.peer_addr, peerAddress, 6);
   peer.channel = CHANNEL;
   peer.encrypt = false;
 
   if (esp_now_init() != ESP_OK) {
-    SerialBT.println("Failed to init ESP-NOW.");
+    SerialBT.println("ESP-NOW init failed");
     return;
   }
 
-  esp_now_register_send_cb(onDataSent);
+  //esp_now_register_send_cb(onDataSent);
   esp_now_register_recv_cb(OnDataRecv);
+
   if (esp_now_add_peer(&peer) != ESP_OK) {
-    SerialBT.println("Failed to add peer.");
+    SerialBT.println("Peer add failed");
     return;
   }
 
-  SerialBT.println("Setup Complete.");
+  SerialBT.println("Setup done");
 }
 
 void loop() {
@@ -47,40 +78,44 @@ void loop() {
     String text = SerialBT.readStringUntil('\n');
     String message = name + ": " + text;
 
-    if (message.length() < MAX_MESSAGE_LENGTH) {
-      SerialBT.println("You: " + text);
-      esp_now_send(peer.peer_addr, (uint8_t*)message.c_str(), message.length());
-    } else {
-      send_chunk_message(text);
-    }
+    SerialBT.println("You: " + text);
+    send_chunk_message(message);
   }
+
 }
 
 void send_chunk_message(String message) {
-  String sender_info = name + ": ";
-  esp_now_send(peer.peer_addr, (uint8_t*)sender_info.c_str(), message.length());
-  SerialBT.print("You: ");
+  int len = message.length();
 
-  // send chunks
-  for (int i = 0; i < message.length(); i += MAX_MESSAGE_LENGTH) {
-    String part = message.substring(i, i + MAX_MESSAGE_LENGTH);
-    esp_now_send(peer.peer_addr, (uint8_t*)part.c_str(), message.length());
-    SerialBT.print(part);
+  for (int i = 0; i < len; i += BLOCK_SIZE) {
+    memset(plain, 0, BLOCK_SIZE);
+    int copyLen = BLOCK_SIZE;
+
+    if (i + BLOCK_SIZE > len)
+      copyLen = len - i;
+
+    memcpy(plain, message.c_str() + i, copyLen);
+    encryptBlock(plain, cipher);
+
+    esp_now_send(peer.peer_addr, cipher, BLOCK_SIZE);
+
+    delay(5);
   }
-
-  SerialBT.println();
 }
 
 void onDataSent(const uint8_t *mac_address, esp_now_send_status_t status) {
-  if (device_logs == true) {
-    SerialBT.print("Status: ");
-    SerialBT.println(status);
-  }
+  SerialBT.print("Send status: ");
+  SerialBT.println(status);
 }
 
-void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
-  for (int i = 0; i < data_len; i++) {
-    SerialBT.print((char)data[i]);
+void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data,int data_len) {
+  if (data_len != BLOCK_SIZE) return;
+
+  decryptBlock((byte*)data, decrypted);
+  for (int i = 0; i < BLOCK_SIZE; i++) {
+    if (decrypted[i] == 0) break;
+
+    SerialBT.print((char)decrypted[i]);
   }
 
   SerialBT.println();
