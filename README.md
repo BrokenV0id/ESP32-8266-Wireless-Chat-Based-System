@@ -11,6 +11,7 @@ _Features:_
 3. Wide user support - Allows for multple devices to communicate at once. While the exact number is unknown, it is believed to
    handle more then 5 users.
 4. Message chunking - Messages exceeding a certain length will be split up and sent individually.
+5. Message encryption - Messages are now encrypted and only devices with the same key can read sent messages.
 
 _Examples:_
 <img width="1328" height="258" alt="image" src="https://github.com/user-attachments/assets/406142ec-3c8b-4c3f-9476-71bb154edf84" />
